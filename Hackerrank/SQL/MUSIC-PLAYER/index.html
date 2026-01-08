@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Music Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/css/index.css">
+  <style>
+    * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: system-ui, sans-serif;
+}
+
+body {
+  background: #000;
+  color: #fff;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 220px 1fr 260px;
+  height: calc(100vh - 90px);
+}
+
+/* Sidebar */
+.sidebar {
+  background: #111;
+  padding: 20px;
+}
+
+.sidebar h2 {
+  margin-bottom: 20px;
+}
+
+.sidebar li {
+  list-style: none;
+  padding: 10px 0;
+  color: #bbb;
+  cursor: pointer;
+}
+
+/* Main */
+.main {
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.card {
+  background: #181818;
+  padding: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.card:hover {
+  background: #222;
+}
+
+.art {
+  background: linear-gradient(135deg, #444, #888);
+  height: 140px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+/* Queue */
+.queue {
+  background: #111;
+  padding: 20px;
+}
+
+.queue ul {
+  margin-top: 10px;
+}
+
+.queue li {
+  list-style: none;
+  padding: 8px 0;
+  font-size: 14px;
+  color: #aaa;
+}
+
+/* Player */
+.player {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 90px;
+  background: #181818;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+.track-info {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.thumb {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #666, #aaa);
+  border-radius: 6px;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.controls input {
+  width: 200px;
+}
+
+.volume button,
+.controls button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+  .sidebar, .queue {
+    display: none;
+  }
+}
+
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <h2>Your Library</h2>
+    <ul>
+      <li>Liked Songs</li>
+      <li>Recently Played</li>
+      <li>Artists</li>
+      <li>Albums</li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+    <h1>What do you want to play?</h1>
+
+    <section class="cards">
+      <div class="card" onclick="playFromCard(0)">
+        <div class="art"></div>
+        <p>Peaceful Morning</p>
+      </div>
+      <div class="card" onclick="playFromCard(1)">
+        <div class="art"></div>
+        <p>Evening Breeze</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Queue -->
+  <aside class="queue">
+    <h3>Queue</h3>
+    <ul id="queueList"></ul>
+  </aside>
+
+</div>
+
+<!-- Bottom Player -->
+<footer class="player">
+  <div class="track-info">
+    <div class="thumb"></div>
+    <div>
+      <div id="title">Title</div>
+      <div id="artist">Artist</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button onclick="prevSong()">⏮</button>
+    <button onclick="togglePlay()" id="playBtn">▶</button>
+    <button onclick="nextSong()">⏭</button>
+
+    <input type="range" id="progress" value="0">
+  </div>
+
+  <div class="volume">
+    <button onclick="volumeDown()">🔉</button>
+    <button onclick="volumeUp()">🔊</button>
+  </div>
+</footer>
+
+<audio id="audio"></audio>
+
+<script>
+    const songs = [
+  {
+    title: "Peaceful Morning",
+    artist: "Acoustic Session",
+    src: "C:\Users\Admin\Downloads\Pathala-Pathala-MassTamilan.so"
+  },
+  {
+    title: "Evening Breeze",
+    artist: "Calm Strings",
+    src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+  }
+];
+
+let current = 0;
+let playing = false;
+
+const audio = document.getElementById("audio");
+const title = document.getElementById("title");
+const artist = document.getElementById("artist");
+const playBtn = document.getElementById("playBtn");
+const progress = document.getElementById("progress");
+const queueList = document.getElementById("queueList");
+
+songs.forEach((s, i) => {
+  const li = document.createElement("li");
+  li.textContent = s.title;
+  li.onclick = () => playFromCard(i);
+  queueList.appendChild(li);
+});
+
+function loadSong(i) {
+  audio.src = songs[i].src;
+  title.textContent = songs[i].title;
+  artist.textContent = songs[i].artist;
+}
+
+loadSong(current);
+
+function togglePlay() {
+  playing ? audio.pause() : audio.play();
+}
+
+audio.onplay = () => {
+  playing = true;
+  playBtn.textContent = "⏸";
+};
+
+audio.onpause = () => {
+  playing = false;
+  playBtn.textContent = "▶";
+};
+
+function nextSong() {
+  current = (current + 1) % songs.length;
+  loadSong(current);
+  audio.play();
+}
+
+function prevSong() {
+  current = (current - 1 + songs.length) % songs.length;
+  loadSong(current);
+  audio.play();
+}
+
+function playFromCard(i) {
+  current = i;
+  loadSong(current);
+  audio.play();
+}
+
+audio.ontimeupdate = () => {
+  progress.value = (audio.currentTime / audio.duration) * 100 || 0;
+};
+
+progress.oninput = () => {
+  audio.currentTime = (progress.value / 100) * audio.duration;
+};
+
+function volumeUp() {
+  audio.volume = Math.min(1, audio.volume + 0.1);
+}
+
+function volumeDown() {
+  audio.volume = Math.max(0, audio.volume - 0.1);
+}
+
+</script>
+</body>
+</html>
